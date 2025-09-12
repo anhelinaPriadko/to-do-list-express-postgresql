@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
-import { dbData } from "./config/dataBaseConfig";
+import { dbConfig } from "./config/dataBaseConfig.js";
 
 const app = express();
 const port = 3000;
@@ -9,10 +9,22 @@ const port = 3000;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-let db = new pg.Client(dbData);
+let db = new pg.Client(dbConfig);
 db.connect();
 
-app.get("/", (req, res) => {
+async function getItems(){
+  let items = [];
+  try{
+    const result = await db.query("select * from items");
+    items = result.rows;
+  } catch (error){
+    console.log(error);
+  }
+  return items;
+}
+
+app.get("/", async (req, res) => {
+  let items = await getItems();
   res.render("index.ejs", {
     listTitle: "Today",
     listItems: items,

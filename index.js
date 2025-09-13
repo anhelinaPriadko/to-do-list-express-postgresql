@@ -61,6 +61,14 @@ async function updateItem(itemId, itemTitle) {
   }
 }
 
+async function deleteItem(itemId){
+  try{
+    await db.query("delete from items where id = $1",[itemId]);
+  } catch (error){
+    console.log(error);
+  }
+}
+
 app.get("/", async (req, res) => {
   let items = await getItems();
   res.render("index.ejs", {
@@ -95,7 +103,12 @@ app.post(
   }
 );
 
-app.post("/delete", (req, res) => {});
+app.post("/delete", async (req, res) => {
+  if(req.body.deleteItemId){
+    await deleteItem(req.body.deleteItemId);
+  }
+  res.redirect("/");
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

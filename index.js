@@ -36,6 +36,31 @@ async function addItem(title) {
   }
 }
 
+async function getItem(itemId) {
+  let item;
+  try {
+    const result = await db.query("select * from items where id = $1", [
+      itemId,
+    ]);
+    item = result.rows[0];
+  } catch (error) {
+    console.log(error);
+  }
+
+  return item;
+}
+
+async function updateItem(itemId, itemTitle) {
+  try {
+    await db.query("update items set title = $1 where id = $2", [
+      itemTitle,
+      itemId,
+    ]);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 app.get("/", async (req, res) => {
   let items = await getItems();
   res.render("index.ejs", {
@@ -54,7 +79,21 @@ app.post("/add", checkSchema(titleAddValidationSchema), async (req, res) => {
   res.redirect("/");
 });
 
-app.post("/edit", (req, res) => {});
+app.post(
+  "/edit",
+  checkSchema(titleUpdateValidationSchema),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log(errors.array());
+    } else {
+      let item = await getItem(req.body.updatedItemId);
+      if(item)
+        await updateItem(req.body.updatedItemId, req.body.updatedItemTitle);
+    }
+    res.redirect("/");
+  }
+);
 
 app.post("/delete", (req, res) => {});
 
